@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, CreditCard, Settings, Menu, Package2, BarChart3, Users, HelpCircle, LogOut } from "lucide-react"
+import { Home, CreditCard, Settings, Menu, Package2, BarChart3, Users, HelpCircle, User, List, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -48,6 +48,9 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="mt-8 space-y-1">
           <NavItem href="/dashboard" icon={<Home className="h-4 w-4" />} label="Dashboard" />
           <NavItem href="/payments" icon={<CreditCard className="h-4 w-4" />} label="Payments" />
+           <NavItem href="/merchant/plans" icon={<CreditCard className="h-4 w-4" />} label="Merchant Sunscription" />
+            <NavItem href="/merchant/customers" icon={<Users className="h-4 w-4" />} label="Customers" />
+             <NavItem href="/merchant/settings" icon={<Settings className="h-4 w-4" />} label="Merchant Settings" />
           <NavItem href="/analytics" icon={<BarChart3 className="h-4 w-4" />} label="Analytics" />
           <NavItem href="/recipients" icon={<Users className="h-4 w-4" />} label="Recipients" />
           <NavItem href="/settings" icon={<Settings className="h-4 w-4" />} label="Settings" />
