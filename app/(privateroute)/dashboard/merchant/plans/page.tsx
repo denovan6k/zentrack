@@ -1,9 +1,9 @@
-
+"use client"
 
 import PlanCard from "@/components/merchant/PlanCard";
 import { mockPlans } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 
 const MerchantPlans = () => {
