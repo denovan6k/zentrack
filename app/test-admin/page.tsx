@@ -1,3 +1,4 @@
+"use client"
 import { useState, useEffect } from 'react';
 import { useAccount, useContract } from 'wagmi';
 import { ethers } from 'ethers';
