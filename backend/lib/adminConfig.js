@@ -1,7 +1,7 @@
 // lib/firebaseAdmin.js
 import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import serviceAccount from '../../chat-example-9ea60-firebase-adminsdk-v7lih-cc1e164c55.json' with { type: "json" };
+import serviceAccount from './chat-example-9ea60-firebase-adminsdk-v7lih-cc1e164c55.json' with { type: "json" };
 
 // Check if an app is already initialized; if not, initialize it
 let adminApp;

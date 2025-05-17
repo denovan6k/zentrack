@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 const port = process.env.PORT || 3001;
-const contractAddress = process.env.DONATION_CONTRACT_ADDRESS;
+const contractAddress = process.env.CONTRACT_ADDRESS;
 const privateKey = process.env.PRIVATE_KEY?.trim();
 const rpcUrl = process.env.RPC_URL;
 
