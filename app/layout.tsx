@@ -6,6 +6,10 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/hooks/use-auth"
+// import { Providers } from "./onchainprovider"
+import { Providers } from "./webprovider"
+import '@rainbow-me/rainbowkit/styles.css';
+
 
 const poppins = Poppins({ subsets: ["latin"], weight: "400" });
 const inter = Inter({ subsets: ["latin"] })
@@ -26,9 +30,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={poppins.className}>
         {/* <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange> */}
+      
           <AuthProvider>
+            <Providers>
             {children}
             <Toaster />
+            </Providers>
           </AuthProvider>
         {/* </ThemeProvider> */}
       </body>

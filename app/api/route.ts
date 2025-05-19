@@ -1,4 +1,4 @@
-import { adminDb } from './lib/adminConfig';
+import { adminDb } from '../../lib/adminConfig';
 import { Donation } from '../types';
 import { NextResponse } from 'next/server';
 

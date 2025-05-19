@@ -1,113 +1,190 @@
-"use client"
-
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
-
-interface User {
-  walletAddress: string
-  email?: string
-  name?: string
+'use client'
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  AuthError,
+  User as FirebaseUser,
+} from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  Firestore,
+} from "firebase/firestore";
+import { auth } from "@/lib/firebase";
+interface UserProfile {
+  uid: string;
+  walletAddress: string;
+  email: string;
+  name?: string;
+  role: string;
 }
 
 interface AuthContextType {
-  user: User | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  login: (walletAddress: string) => Promise<boolean>
-  logout: () => void
-  updateUserProfile: (data: Partial<User>) => void
+  user: UserProfile | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (
+    walletAddress: string,
+    email: string,
+    password: string
+  ) => Promise<boolean>;
+  signup: (
+    walletAddress: string,
+    email: string,
+    password: string
+  ) => Promise<boolean>;
+  logout: () => void;
+  updateUserProfile: (data: Partial<UserProfile>) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
-  const pathname = usePathname()
-  const { toast } = useToast()
-
-  // Check if user is already logged in
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { toast } = useToast();
+ const db: Firestore = getFirestore();
+  // Load stored user on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("zenpay_user")
-    if (storedUser) {
+    const stored = localStorage.getItem("zenpay_user");
+    if (stored) {
       try {
-        setUser(JSON.parse(storedUser))
-      } catch (error) {
-        console.error("Failed to parse stored user:", error)
-        localStorage.removeItem("zenpay_user")
+        setUser(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem("zenpay_user");
       }
     }
-    setIsLoading(false)
-  }, [])
+    setIsLoading(false);
+  }, []);
 
-  // Protect routes
+  // Route protection
   useEffect(() => {
     if (!isLoading) {
-      const publicRoutes = ["/", "/login", "/signup", "/merchant"]
-      const isPublicRoute = publicRoutes.includes(pathname)
-
-      if (!user && !isPublicRoute) {
-        router.push("/login")
+      const publicRoutes = ["/", "/login", "/signup", "/merchant"];
+      if (!user && !publicRoutes.includes(pathname)) {
+        router.push("/login");
       }
     }
-  }, [user, isLoading, pathname, router])
+  }, [user, isLoading, pathname, router]);
 
-  const login = async (walletAddress: string): Promise<boolean> => {
+  const login = async (
+    walletAddress: string,
+    email: string,
+    password: string
+  ): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      // In a real app, this would validate with a backend
-      setIsLoading(true)
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const newUser: User = {
+      // Firebase email/password auth
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const fbUser: FirebaseUser = cred.user;
+ // Fetch role from Firestore
+      const userDoc = await getDoc(doc(db, "users", fbUser.uid));
+      const data = userDoc.data();
+      const role = data?.role || "customer";
+      const profile: UserProfile = {
+        uid: fbUser.uid,
         walletAddress,
-        // Default values that would normally come from a backend
-        email: `${walletAddress.substring(0, 6)}@example.com`,
-        name: `User ${walletAddress.substring(0, 4)}`,
-      }
+        email: fbUser.email || email,
+        name: fbUser.displayName || undefined,
+         role,
+      };
 
-      setUser(newUser)
-      localStorage.setItem("zenpay_user", JSON.stringify(newUser))
+      setUser(profile);
+      localStorage.setItem("zenpay_user", JSON.stringify(profile));
 
       toast({
         title: "Login Successful",
-        description: "Welcome to ZenPay!",
-      })
+        description: "Welcome back to ZenPay!",
+      });
 
-      return true
-    } catch (error) {
-      console.error("Login failed:", error)
+      return true;
+    } catch (err: any) {
+      const message = (err as AuthError).message || "Login failed";
       toast({
-        title: "Login Failed",
-        description: "There was an error logging in. Please try again.",
+        title: "Login Error",
+        description: message,
         variant: "destructive",
-      })
-      return false
+      });
+      return false;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
+  const signup = async (
+    walletAddress: string,
+    email: string,
+    password: string
+  ): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      // Firebase sign-up
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const fbUser: FirebaseUser = cred.user;
+ // Set default role = "customer" in Firestore
+      await setDoc(doc(db, "users", fbUser.uid), {
+        role: "customer",
+        createdAt: new Date().toISOString(),
+      });
+
+      const profile: UserProfile = {
+        uid: fbUser.uid,
+        walletAddress,
+        email: fbUser.email || email,
+        name: fbUser.displayName || undefined,
+        role: "customer",
+      };
+
+      setUser(profile);
+      localStorage.setItem("zenpay_user", JSON.stringify(profile));
+
+      toast({
+        title: "Signup Successful",
+        description: "Your account has been created.",
+      });
+
+      return true;
+    } catch (err: any) {
+      const message = (err as AuthError).message || "Signup failed";
+      toast({
+        title: "Signup Error",
+        description: message,
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const logout = () => {
-    setUser(null)
-    localStorage.removeItem("zenpay_user")
-    router.push("/")
+    setUser(null);
+    localStorage.removeItem("zenpay_user");
+    router.push("/");
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
-    })
-  }
+    });
+  };
 
-  const updateUserProfile = (data: Partial<User>) => {
+  const updateUserProfile = (data: Partial<UserProfile>) => {
     if (user) {
-      const updatedUser = { ...user, ...data }
-      setUser(updatedUser)
-      localStorage.setItem("zenpay_user", JSON.stringify(updatedUser))
+      const updated = { ...user, ...data };
+      setUser(updated);
+      localStorage.setItem("zenpay_user", JSON.stringify(updated));
     }
-  }
+  };
 
   return (
     <AuthContext.Provider
@@ -116,19 +193,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         login,
+        signup,
         logout,
         updateUserProfile,
       }}
     >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be inside AuthProvider");
+  return context;
 }

@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/sidebar"
 import { NotificationsPopover } from "@/components/notifications"
 import { UserNav } from "@/components/user-nav"
 import { Loader2 } from "lucide-react"
+import { ConnectButton } from "@rainbow-me/rainbowkit"
 
 export default function DashboardLayout({
   children,
@@ -38,6 +39,7 @@ export default function DashboardLayout({
           <div className="flex items-center gap-4">
             <NotificationsPopover />
             <UserNav />
+            <ConnectButton accountStatus="avatar" />
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6 bg-gray-50 dark:bg-gray-900">{children}</main>

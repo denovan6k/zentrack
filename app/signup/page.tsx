@@ -1,5 +1,5 @@
 "use client";
-import { FundButton } from '@coinbase/onchainkit/fund';
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,8 +7,7 @@ import { Package2, Wallet, ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAccount } from "wagmi";
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { FundButton } from '@coinbase/onchainkit/fund';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,15 +27,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/config";
+import {
+  createUserWithEmailAndPassword,
+  AuthError,
+} from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-
-const loginSchema = z.object({
-  walletAddress: z
-    .string()
-    .min(1, { message: "Please connect your wallet or enter your wallet address" }),
+import { useAccount } from "wagmi";
+const signupSchema = z.object({
+  walletAddress: z.string().min(1, { message: "Please connect your wallet" }),
   emailAddress: z
     .string()
     .email({ message: "Invalid email address" }),
@@ -44,18 +43,16 @@ const loginSchema = z.object({
     .string()
     .min(8, { message: "Password must be at least 8 characters long" }),
 });
-type LoginValues = z.infer<typeof loginSchema>;
+type SignupValues = z.infer<typeof signupSchema>;
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const { address, isConnected } = useAccount();
-  // console.log("address", address);
-  // console.log("isConnected", isConnected);
-  const form = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<SignupValues>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       walletAddress: "",
       emailAddress: "",
@@ -64,26 +61,31 @@ export default function LoginPage() {
     mode: "onChange",
   });
 
-  const onSubmit = async (data: LoginValues) => {
+  const onSubmit = async (data: SignupValues) => {
     setIsConnecting(true);
   const  onChainAddress= address || data.walletAddress;
     try {
+      
 
-      const success = await login(onChainAddress,  data.emailAddress,
+      // 2. Then do your wallet-based login
+      const success = await signup(onChainAddress, data.emailAddress,
         data.password);
       if (success) {
         router.push("/dashboard");
       } else {
         toast({
           title: "Wallet login failed",
-          description: "Unable to log in with this wallet.",
+          description: "Could not associate that wallet.",
           variant: "destructive",
         });
       }
     } catch (err: any) {
+      const message =
+        (err as AuthError).message ||
+        "Signup failed, please try again.";
       toast({
-        title: "Login error",
-        description: err.message || "Something went wrong.",
+        title: "Signup error",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -99,28 +101,28 @@ export default function LoginPage() {
       setIsConnecting(false);
       toast({
         title: "Wallet Connected",
-        description: `Connected: ${mock}`,
+        description: mock,
       });
     }, 1500);
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-             <Link
+      <Link
         href="/"
-        className=" flex justify-center items-center gap-2 font-semibold"
+        className="absolute top-8 left-8 flex items-center gap-2 font-semibold"
       >
-        
+        <Package2 className="h-6 w-6" />
         <span className="font-bold text-xl bg-gradient-to-r from-[#4C2A85] to-purple-400 bg-clip-text text-transparent">
           ZenPay
         </span>
       </Link>
-          <CardTitle className="text-2xl font-bold">Sign In to ZenPay</CardTitle>
+
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Sign Up for ZenPay</CardTitle>
           <CardDescription>
-            Connect your wallet and enter your email/password to continue.
+            Connect your wallet and create an account to get started.
           </CardDescription>
         </CardHeader>
 
@@ -136,28 +138,27 @@ export default function LoginPage() {
                     <FormLabel>Wallet Address</FormLabel>
                     <div className="flex items-center gap-2">
                       <FormControl>
-                        <Input
-                          placeholder="0x..."
-                          {...field}
-                          className="flex-1"
-                        />
-                      </FormControl>
-                       {/* dynamic helper text replaces placeholder once connected */}
-  {isConnected && address ? (
-    <p className="mt-1 text-sm text-gray-500 truncate ">{address}</p>
-  ) : ""}
-                      {/* <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleConnectWallet}
-                        disabled={isConnecting}
-                        className="gap-2"
-                      >
-                        <Wallet className="h-4 w-4" />
-                        Connect
-                      </Button> */}
-                      {/* <FundButton className='bg-[#4C2A85] hover:bg-[#3b2064] text-white rounded-lg' /> */}
-                       <ConnectButton label='Connect wallet'/>
+                                        <Input
+                                          placeholder="0x..."
+                                          {...field}
+                                          className="flex-1"
+                                        />
+                                      </FormControl>
+                                       {/* dynamic helper text replaces placeholder once connected */}
+                  {isConnected && address ? (
+                    <p className="mt-1 text-sm text-gray-500 truncate ">{address}</p>
+                  ) : ""}
+                                      {/* <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleConnectWallet}
+                                        disabled={isConnecting}
+                                        className="gap-2"
+                                      >
+                                        <Wallet className="h-4 w-4" />
+                                        Connect
+                                      </Button> */}
+                                      <FundButton className='bg-[#4C2A85] hover:bg-[#3b2064] text-white rounded-lg' />
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -208,7 +209,7 @@ export default function LoginPage() {
                 className="w-full bg-[#4C2A85] hover:bg-[#3b2064]"
                 disabled={isConnecting || !form.formState.isValid}
               >
-                {isConnecting ? "Signing In..." : "Sign In"}
+                {isConnecting ? "Signing Up..." : "Sign Up"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
@@ -217,9 +218,9 @@ export default function LoginPage() {
       </Card>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        Don’t have an account?{" "}
-        <Link href="/signup" className="font-medium text-[#4C2A85] hover:underline">
-          Sign up here
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-[#4C2A85] hover:underline">
+          Log in
         </Link>
       </p>
     </div>

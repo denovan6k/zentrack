@@ -100,7 +100,7 @@ export function NewPaymentDialog() {
 
     // Close the dialog
     setOpen(false)
-
+// sm:max-w-lg  
     // Reset the form
     form.reset()
   }
@@ -113,7 +113,14 @@ export function NewPaymentDialog() {
           New Payment
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+       
+      <DialogContent className="sm:max-w-[425px]
+          w-full
+    max-w-md      
+      
+    max-h-[90vh]    
+    overflow-y-auto 
+    p-6">
         <DialogHeader>
           <DialogTitle>Create New Recurring Payment</DialogTitle>
           <DialogDescription>Set up a new recurring payment on the Base blockchain.</DialogDescription>
