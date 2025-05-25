@@ -20,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { ConnectButton } from "@rainbow-me/rainbowkit"
 
 export default function Home() {
   return (
@@ -67,10 +68,11 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/login" className="hidden sm:block">
-              <Button className="bg-[#4C2A85] hover:bg-[#3b2064]">
+              {/* <Button className="bg-[#4C2A85] hover:bg-[#3b2064]">
                 <Wallet className="h-4 w-4 mr-2" />
                 Connect Wallet
-              </Button>
+              </Button> */}
+              <ConnectButton label='Connect wallet'/>
             </Link>
           </div>
         </div>

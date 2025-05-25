@@ -103,7 +103,7 @@ export default function LoginPage() {
       });
     }, 1500);
   };
-
+// {address}
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
 
@@ -136,16 +136,16 @@ export default function LoginPage() {
                     <FormLabel>Wallet Address</FormLabel>
                     <div className="flex items-center gap-2">
                       <FormControl>
-                        <Input
+                       {isConnected && address ? (
+""
+  ) :    <Input
                           placeholder="0x..."
                           {...field}
                           className="flex-1"
-                        />
+                        />}
                       </FormControl>
                        {/* dynamic helper text replaces placeholder once connected */}
-  {isConnected && address ? (
-    <p className="mt-1 text-sm text-gray-500 truncate ">{address}</p>
-  ) : ""}
+
                       {/* <Button
                         type="button"
                         variant="outline"
